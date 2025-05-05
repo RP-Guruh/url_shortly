@@ -9,5 +9,17 @@
 <body class="bg-black min-h-screen font-mono text-neon">
 
     {{ block "content" . }}{{ end }}
+
+
+<script>
+    function copyText() {
+        const inputElement = document.getElementById("result");
+        inputElement.select();
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges(); // Deselect the text
+        alert("Copied the text: " + inputElement.value);
+    }
+</script>
+
 </body>
 </html>

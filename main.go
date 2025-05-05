@@ -8,14 +8,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/gofiber/template/html/v2"
 )
 
 type Link struct {
 	OriginalUrl string `validate:"required,min=5"`
 	ShortUrl    string
+	UniqueKey   string
 }
 
+var store = session.New()
 var validate = validator.New()
 
 func main() {
@@ -27,10 +30,7 @@ func main() {
 	})
 	app.Use(logger.New())
 
-	app.Get("/", func(c *fiber.Ctx) error {
-
-		return c.Render("index", fiber.Map{})
-	})
+	app.Get("/", index)
 
 	app.Post("/shorten", storeUrl)
 
@@ -62,20 +62,49 @@ func storeUrl(c *fiber.Ctx) error {
 		})
 	}
 
-	link.ShortUrl = generateShortLink()
+	link.ShortUrl, link.UniqueKey = generateShortLink()
+	saveurltodb(link.OriginalUrl, link.ShortUrl, link.UniqueKey)
+	sess, err := store.Get(c)
+	if err != nil {
+		return err
+	}
 
-	// Return the result
-	return c.JSON(fiber.Map{
-		"message":   "URL shortened successfully",
-		"original":  link.OriginalUrl,
-		"short_url": link.ShortUrl,
-	})
+	sess.Set("message", "URL shortened successfully")
+	sess.Set("original", link.OriginalUrl)
+	sess.Set("short_url", link.ShortUrl)
+	sess.Save()
+
+	// Redirect ke halaman utama
+	return c.Redirect("/")
+
 }
 
-func generateShortLink() string {
+func index(c *fiber.Ctx) error {
+	sess, err := store.Get(c)
+	if err != nil {
+		return err
+	}
+
+	data := fiber.Map{}
+
+	if msg := sess.Get("message"); msg != nil {
+		data["message"] = msg
+		data["original"] = sess.Get("original")
+		data["short_url"] = sess.Get("short_url")
+
+		sess.Delete("message")
+		sess.Delete("original")
+		sess.Delete("short_url")
+		sess.Save()
+	}
+
+	return c.Render("index", data)
+}
+
+func generateShortLink() (string, string) {
 	randomCode := generateRandomString(6)
 	urlShort := fmt.Sprintf("www.urlty.link/%s", randomCode)
-	return urlShort
+	return urlShort, randomCode
 }
 
 func generateRandomString(length int) string {
