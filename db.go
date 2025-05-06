@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Data struct {
@@ -17,7 +17,7 @@ type Data struct {
 }
 
 func connection() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./db/shorturl_db.db")
+	db, err := sql.Open("sqlite", "./db/shorturl_db.db")
 	if err != nil {
 		return nil, err
 	}
@@ -58,4 +58,25 @@ func saveurltodb(originalurl string, shorturl string, uniquekey string) {
 	log.Println("Data saved to the database successfully")
 	fmt.Println("Data saved to the database successfully")
 
+}
+
+func getOriginalURL(uniqueKey string) (string, error) {
+	db, err := connection()
+	if err != nil {
+		log.Printf("Failed to connect to the database: %v", err)
+		return "", err
+	}
+	defer db.Close()
+
+	var originalURL string
+	err = db.QueryRow("SELECT original_url FROM yourlink WHERE unique_key = ?", uniqueKey).Scan(&originalURL)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", sql.ErrNoRows
+		}
+		log.Printf("Failed to query the database: %v", err)
+		return "", err
+	}
+
+	return originalURL, nil
 }

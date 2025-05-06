@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 
@@ -32,6 +33,8 @@ func main() {
 
 	app.Get("/", index)
 
+	app.Get("/:uniqueKey", RedirectHandler)
+
 	app.Post("/shorten", storeUrl)
 
 	app.Use(func(c *fiber.Ctx) error {
@@ -43,6 +46,20 @@ func main() {
 	})
 
 	log.Fatal(app.Listen(":3000"))
+}
+
+func RedirectHandler(c *fiber.Ctx) error {
+	uniqueKey := c.Params("uniqueKey")
+
+	originalURL, err := getOriginalURL(uniqueKey)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return c.Status(fiber.StatusNotFound).SendString("URL not found")
+		}
+		return c.Status(fiber.StatusInternalServerError).SendString("Internal server error")
+	}
+
+	return c.Redirect(originalURL, fiber.StatusMovedPermanently)
 }
 
 func storeUrl(c *fiber.Ctx) error {
