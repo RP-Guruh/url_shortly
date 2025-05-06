@@ -119,8 +119,8 @@ func index(c *fiber.Ctx) error {
 }
 
 func generateShortLink() (string, string) {
-	randomCode := generateRandomString(6)
-	urlShort := fmt.Sprintf("www.urlty.link/%s", randomCode)
+	randomCode := generateRandomString(5)
+	urlShort := fmt.Sprintf("www.susut.ink/%s", randomCode)
 	return urlShort, randomCode
 }
 
