@@ -58,7 +58,7 @@ func RedirectHandler(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusInternalServerError).SendString("Internal server error")
 	}
-
+	fmt.Println("visiting", originalURL)
 	return c.Redirect(originalURL, fiber.StatusMovedPermanently)
 }
 
