@@ -1,21 +1,32 @@
 {{ define "content" }}
-<div class="container mx-auto max-w-2xl px-4 min-h-screen flex items-center justify-center">
+
+<!-- Wrapper dengan posisi relatif untuk latar belakang absolut -->
+<div class="relative min-h-screen overflow-hidden">
+  <!-- Background image -->
+  <img src="/images/floor.jpg" alt="Designed by coolvector / Freepik" class="absolute inset-0 object-cover w-full h-full z-[-10]">
+
+  <!-- Overlay gelap opsional agar teks lebih terbaca -->
+  <div class="absolute inset-0 bg-black bg-opacity-5 z-[-5]"></div>
+
+  <!-- Konten utama -->
+  <div class="relative z-0 container mx-auto max-w-2xl px-4 min-h-screen flex items-center justify-center">
     <div class="w-full">
+
       <!-- Tagline -->
       <h1 class="text-2xl font-extrabold text-center mb-6 text-pink-500 tracking-widest uppercase drop-shadow-[0_0_20px_rgba(255,0,255,0.8)] neon-border">
         Short it. Share it. Scale it.
       </h1>
 
-      <p class="text-center text-purple-400 text-sm mb-6">
+      <p class="text-center text-purple-200 text-sm mb-6 drop-shadow-[0_0_20px_rgba(255,0,255,0.8)] neon-border">
         <strong>"Susut"</strong> is an Indonesian term that refers to a reduction or decrease in size, amount, or length.
       </p>
-  
+
       <!-- Card -->
       <div class="border border-pink-500 p-8 rounded-xl shadow-[0_0_30px_rgba(255,0,255,0.5)] bg-black bg-opacity-80">
         <h5 class="text-md text-purple-300 font-light mb-8 text-center">
           Paste your link to get a clean, shareable short URL.
         </h5>
-  
+
         <form action="/shorten" method="POST">
           <div class="mb-6">
             <input
@@ -38,7 +49,7 @@
             </button>
           </div>
         </form>
-  
+
         {{ if .message }}
         <div class="mt-6">
           <p class="text-lg text-purple-300 font-semibold">{{ .message }}</p>
@@ -57,12 +68,19 @@
           </div>
         </div>
         {{ end }}
-  
+
       </div>
     </div>
+  </div>
 </div>
-  
+<div class="absolute bottom-4 w-full text-center text-xs text-white z-50">
+  <a href="https://www.freepik.com" target="_blank" rel="noopener noreferrer" class="hover:underline">
+    Designed by coolvector / Freepik
+  </a>
+</div>
 
 {{ end }}
+
+
 
 {{ template "main" . }}
