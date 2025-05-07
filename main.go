@@ -30,6 +30,7 @@ func main() {
 		ViewsLayout: "layouts/main",
 	})
 	app.Use(logger.New())
+	app.Static("/images", "./images")
 
 	app.Get("/", index)
 
