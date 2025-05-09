@@ -55,26 +55,36 @@ func main() {
 func RedirectHandler(c *fiber.Ctx) error {
 	fmt.Println("masuk redirect handler")
 
+	// Mengambil uniqueKey dari URL parameter
 	uniqueKey := c.Params("uniqueKey")
 
+	// Mengambil URL asli berdasarkan uniqueKey
 	originalURL, err := getOriginalURL(uniqueKey)
 	if err != nil {
+		// Menangani kesalahan jika URL tidak ditemukan atau ada kesalahan lainnya
 		if err == sql.ErrNoRows {
 			return c.Status(fiber.StatusNotFound).SendString("URL not found")
 		}
 		return c.Status(fiber.StatusInternalServerError).SendString("Internal server error")
 	}
 
+	// Menangkap IP pengunjung, jika berada di balik proxy, menggunakan X-Forwarded-For
 	ip := c.IP()
-	info := getInformation(c, ip)
-
-	fmt.Println("Visitor Info:", info)
-
-	if _, err := storeVisitor(uniqueKey, info); err != nil {
-		fmt.Println("Error storing visitor:", err)
-		// Lanjutkan redirect meskipun gagal simpan
+	if forwardedIP := c.Get("X-Forwarded-For"); forwardedIP != "" {
+		ip = forwardedIP
 	}
 
+	// Mendapatkan informasi pengunjung berdasarkan IP
+	info := getInformation(c, ip)
+	fmt.Println("Visitor Info:", info)
+
+	// Menyimpan informasi pengunjung ke database
+	if _, err := storeVisitor(uniqueKey, info); err != nil {
+		// Jika terjadi kesalahan saat menyimpan, log kesalahan namun tetap lanjutkan redirect
+		fmt.Println("Error storing visitor:", err)
+	}
+
+	// Melakukan redirect ke original URL
 	return c.Redirect(originalURL, fiber.StatusMovedPermanently)
 }
 
