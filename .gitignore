@@ -1,2 +1,4 @@
 ./myproject.exe
 ./tmp
+./.env
+./db

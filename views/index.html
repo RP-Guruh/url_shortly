@@ -1,18 +1,11 @@
 {{ define "content" }}
-
-<!-- Wrapper dengan posisi relatif untuk latar belakang absolut -->
 <div class="relative min-h-screen overflow-hidden">
-  <!-- Background image -->
   <img src="/images/floor.jpg" alt="Designed by coolvector / Freepik" class="absolute inset-0 object-cover w-full h-full z-[-10]">
-
-  <!-- Overlay gelap opsional agar teks lebih terbaca -->
   <div class="absolute inset-0 bg-black bg-opacity-5 z-[-5]"></div>
 
-  <!-- Konten utama -->
   <div class="relative z-0 container mx-auto max-w-2xl px-4 min-h-screen flex items-center justify-center">
     <div class="w-full">
 
-      <!-- Tagline -->
       <h1 class="text-2xl font-extrabold text-center mb-6 text-pink-500 tracking-widest uppercase drop-shadow-[0_0_20px_rgba(255,0,255,0.8)] neon-border">
         Short it. Share it. Scale it.
       </h1>
@@ -21,66 +14,109 @@
         <strong>"Susut"</strong> is an Indonesian term that refers to a reduction or decrease in size, amount, or length.
       </p>
 
-      <!-- Card -->
       <div class="border border-pink-500 p-8 rounded-xl shadow-[0_0_30px_rgba(255,0,255,0.5)] bg-black bg-opacity-80">
-        <h5 class="text-md text-purple-300 font-light mb-8 text-center">
-          Paste your link to get a clean, shareable short URL.
-        </h5>
-
-        <form action="/shorten" method="POST">
-          <div class="mb-6">
-            <input
-              required
-              minlength="5"
-              type="url"
-              name="OriginalUrl"
-              id="original_url"
-              autocomplete="off"
-              placeholder="https://example.com"
-              class="w-full px-5 py-3 rounded-lg bg-black text-pink-500 placeholder-purple-600 border border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-300"
-            />
-          </div>
-          <div class="flex justify-end">
-            <button
-              type="submit"
-              class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-pink-500/50 transition duration-300"
-            >
-              Shorten
-            </button>
-          </div>
-        </form>
-
-        {{ if .message }}
-        <div class="mt-6">
-          <p class="text-lg text-purple-300 font-semibold">{{ .message }}</p>
-          <p class="text-lg text-purple-300 font-semibold">Your Shortened URL:</p>
-          <input type="text" id="result" value="{{ .short_url }}" class="w-full px-4 py-2 rounded-lg bg-gray-100 text-pink-500 border border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500" readonly />
-          <div class="flex justify-center mt-4">
-            <button
-              class="flex items-center gap-x-2 bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-lg shadow-md"
-              onclick="copyText()"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M6 2a2 2 0 00-2 2v10h2V4h8V2H6zM6 8a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V8zm2 0v10h8V8H8z" />
-              </svg>
-              <span>Copy</span>
-            </button>
-          </div>
+        
+        <!-- Tab Navigation -->
+        <div class="flex mb-6 border-b border-pink-500">
+          <button id="tab-btn-shorten" class="tab-btn text-pink-400 px-4 py-2 font-semibold border-b-2 border-pink-500" onclick="switchTab('shorten')">Shorten Link</button>
+          <button id="tab-btn-track" class="tab-btn text-pink-400 px-4 py-2 ml-4 font-semibold" onclick="switchTab('track')">Track Link</button>
         </div>
-        {{ end }}
 
+        <!-- Shorten Form Tab -->
+        <div id="tab-shorten" class="tab-content block">
+          <h5 class="text-md text-purple-300 font-light mb-8 text-center">
+            Paste your link to get a clean, shareable short URL.
+          </h5>
+
+          <form action="/shorten" method="POST">
+            <div class="mb-6">
+              <input
+                required
+                minlength="5"
+                type="url"
+                name="OriginalUrl"
+                id="original_url"
+                autocomplete="off"
+                placeholder="https://example.com"
+                class="w-full px-5 py-3 rounded-lg bg-black text-pink-500 placeholder-purple-600 border border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-300"
+              />
+            </div>
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-pink-500/50 transition duration-300"
+              >
+                Shorten
+              </button>
+            </div>
+          </form>
+
+          {{ if .message }}
+          <div class="mt-6">
+            <p class="text-lg text-purple-300 font-semibold">{{ .message }}</p>
+            <p class="text-lg text-purple-300 font-semibold">Your Shortened URL:</p>
+            <input type="text" id="result" value="{{ .short_url }}" class="w-full px-4 py-2 rounded-lg bg-gray-100 text-pink-500 border border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500" readonly />
+            <div class="flex justify-center mt-4">
+              <button
+                class="flex items-center gap-x-2 bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded-lg shadow-md"
+                onclick="copyText()"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M6 2a2 2 0 00-2 2v10h2V4h8V2H6zM6 8a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V8zm2 0v10h8V8H8z" />
+                </svg>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+          {{ end }}
+        </div>
+
+        <!-- Track Form Tab -->
+        <div id="tab-track" class="tab-content hidden">
+          <h5 class="text-md text-purple-300 font-light mb-8 text-center">
+            Enter a short URL to see how many times it's been visited.
+          </h5>
+          <form action="/track/link" method="POST">
+            <div class="mb-6">
+              <input
+                required
+                type="text"
+                name="code"
+                placeholder="susut.ink/xxxx"
+                class="w-full px-5 py-3 rounded-lg bg-black text-pink-500 placeholder-purple-600 border border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-300"
+              />
+            </div>
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-1 px-6 rounded-lg shadow-md hover:shadow-pink-500/50 transition duration-300"
+              >
+                Check
+              </button>
+            </div>
+          </form>
+
+          {{ if .message_track}}
+          <div class="mt-4 text-center mb-12">
+           
+              <span class="text-3xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-blue-500 animate-pulse">
+               {{ .visitorTotal }}
+              </span>
+           
+            <p class="text-sm text-gray-400 mt-2">Visitors</p>
+            <a href="/" class="text-sm text-purple-300 font-semibold hover:underline">More Detail</a>
+          </div>
+          
+          {{ end }}
       </div>
     </div>
   </div>
 </div>
-<div class="absolute bottom-4 w-full text-center text-xs text-white z-50">
+
+<div class="absolute bottom-6 w-full text-center text-xs text-white">
   <a href="https://www.freepik.com" target="_blank" rel="noopener noreferrer" class="hover:underline">
     Designed by coolvector / Freepik
   </a>
 </div>
 
 {{ end }}
-
-
-
-{{ template "main" . }}

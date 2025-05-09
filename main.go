@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"net/url"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -23,6 +25,7 @@ var store = session.New()
 var validate = validator.New()
 
 func main() {
+
 	engine := html.New("./views", ".html")
 
 	app := fiber.New(fiber.Config{
@@ -37,7 +40,7 @@ func main() {
 	app.Get("/:uniqueKey", RedirectHandler)
 
 	app.Post("/shorten", storeUrl)
-
+	app.Post("/track/link", trackLink)
 	app.Use(func(c *fiber.Ctx) error {
 		log.Error("halaman tidak ditemukan")
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -50,6 +53,8 @@ func main() {
 }
 
 func RedirectHandler(c *fiber.Ctx) error {
+	fmt.Println("masuk redirect handler")
+
 	uniqueKey := c.Params("uniqueKey")
 
 	originalURL, err := getOriginalURL(uniqueKey)
@@ -59,7 +64,17 @@ func RedirectHandler(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusInternalServerError).SendString("Internal server error")
 	}
-	fmt.Println("visiting", originalURL)
+
+	ip := c.IP()
+	info := getInformation(c, ip)
+
+	fmt.Println("Visitor Info:", info)
+
+	if _, err := storeVisitor(uniqueKey, info); err != nil {
+		fmt.Println("Error storing visitor:", err)
+		// Lanjutkan redirect meskipun gagal simpan
+	}
+
 	return c.Redirect(originalURL, fiber.StatusMovedPermanently)
 }
 
@@ -98,24 +113,42 @@ func storeUrl(c *fiber.Ctx) error {
 }
 
 func index(c *fiber.Ctx) error {
+	// Ambil session dari store
 	sess, err := store.Get(c)
 	if err != nil {
 		return err
 	}
 
+	// Siapkan data untuk dikirim ke template
 	data := fiber.Map{}
 
+	// Ambil pesan dan data lainnya dari session jika ada
 	if msg := sess.Get("message"); msg != nil {
 		data["message"] = msg
 		data["original"] = sess.Get("original")
 		data["short_url"] = sess.Get("short_url")
 
+		// Hapus data setelah digunakan
 		sess.Delete("message")
 		sess.Delete("original")
 		sess.Delete("short_url")
 		sess.Save()
 	}
 
+	// Ambil pesan tracking dan data lainnya dari session jika ada
+	if msg_track := sess.Get("message_track"); msg_track != nil {
+		data["message_track"] = msg_track
+		data["visitorTotal"] = sess.Get("visitorTotal")
+
+		// Hapus data setelah digunakan
+		sess.Delete("message_track")
+		sess.Delete("visitorTotal")
+		sess.Save()
+	}
+
+	// Ambil nilai tab aktif dari query string (default "shorten")
+
+	// Render halaman dengan data dan tab aktif
 	return c.Render("index", data)
 }
 
@@ -133,4 +166,32 @@ func generateRandomString(length int) string {
 	}
 	fmt.Println(string(result))
 	return string(result)
+}
+
+func trackLink(c *fiber.Ctx) error {
+	// Ambil data "code" dari form
+
+	fullUrl := c.FormValue("code")
+	parsedUrl, err := url.Parse(fullUrl)
+	if err != nil {
+		return c.Status(400).SendString("Invalid URL")
+	}
+
+	// Ambil path URL setelah '/'
+	unique := strings.TrimPrefix(parsedUrl.Path, "/")
+
+	// Hitung jumlah visitor
+	visitorCount, err := getMyVisitor(unique)
+	if err != nil {
+
+		return c.Status(500).SendString("Internal Server Error")
+	}
+
+	sess, err := store.Get(c)
+	sess.Set("message_track", "Jumlah Visitor")
+	sess.Set("visitorTotal", visitorCount)
+	sess.Save()
+
+	// Kirim response dengan visitorCount
+	return c.Redirect("/")
 }

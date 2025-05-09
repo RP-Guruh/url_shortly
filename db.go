@@ -80,3 +80,68 @@ func getOriginalURL(uniqueKey string) (string, error) {
 
 	return originalURL, nil
 }
+
+func storeVisitor(id_url string, visitorInfo VisitorInfo) (string, error) {
+	// Buka koneksi database
+	db, err := connection()
+	if err != nil {
+		log.Printf("Failed to connect to the database: %v", err)
+		return "", err
+	}
+	defer db.Close()
+
+	// Query untuk insert data, termasuk created_at
+	insertQuery := `
+		INSERT INTO visitorrow (
+			query_url, ip_address, browser, device, os, city, region, 
+			country, country_name, continent, continent_name, latlong, 
+			org, postal, timezone, created_at
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'));
+	`
+
+	// Eksekusi insert
+	_, err = db.Exec(insertQuery,
+		id_url,
+		visitorInfo.IPAddress,
+		visitorInfo.Browser,
+		visitorInfo.Device,
+		visitorInfo.OS,
+		visitorInfo.City,
+		visitorInfo.Region,
+		visitorInfo.Country,
+		visitorInfo.CountryName,
+		visitorInfo.Continent,
+		visitorInfo.ContinentName,
+		visitorInfo.LatLong,
+		visitorInfo.Org,
+		visitorInfo.Postal,
+		visitorInfo.Timezone,
+	)
+
+	if err != nil {
+		log.Printf("Failed to execute insert query: %v", err)
+		return "", err
+	}
+
+	log.Printf("Data saved to the database successfully for ID: %s", id_url)
+	return id_url, nil
+}
+
+func getMyVisitor(uniqueKey string) (int, error) {
+	db, err := connection()
+	if err != nil {
+		log.Printf("Failed to connect to the database: %v", err)
+		return 0, err
+	}
+	defer db.Close()
+
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM visitorrow WHERE query_url = ?", uniqueKey).Scan(&count)
+	if err != nil {
+		log.Println("Error saat menghitung data:", err)
+		return 0, err
+	}
+
+	return count, nil
+}
